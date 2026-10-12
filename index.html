@@ -33,6 +33,13 @@ header button:hover{border-color: var(--ac);}
 .cp{margin-bottom:6px}.cp:last-child{margin-bottom:0}
 .cp span{display:inline-block;width:130px}.cp b{float:right}
 @media(max-width:700px){#conts{position:static;width:auto;margin-top:8px}}
+/*ficha*/
+#ficha{max-width:460px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);padding:20px}
+#ficha::backdrop{background:rgba(0,0,0,.5)}
+#ficha h3{margin:0 0 10px}#ficha a{color:var(--ac);font-size:13px}
+#ficha button{margin-top:14px;padding:6px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer}
+.inf{border:0;background:none;color:var(--mut);cursor:pointer;padding:0 0 0 6px;font-size:12px}
+.chip:has(input:checked) .inf{color:#fff}
 </style>
 </head>
 <body>
@@ -49,11 +56,13 @@ header button:hover{border-color: var(--ac);}
   <div id="mapa"><span id="cargando" style="color:var(--mut)">Cargando mapa…</span><div id="conts"></div></div>
   <div id="lista"></div>
 </main>
+<dialog id="ficha"></dialog>
 <div id="tip"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.0.1/dist/topojson-client.min.js"></script>
 <script src="data.js"></script>
+<script src="historia.js"></script>
 <script>
 const KEY = 'coleccion-numismatica';
 let marcados = JSON.parse(localStorage.getItem(KEY) || '{}');
@@ -91,7 +100,7 @@ Object.keys(PAISES).forEach(cont => {
     const fila = (t, nom) => {
       const its = p.items.filter(i => i.t === t);
       return its.length ? `<div class="fila"><em>${nom}</em>${its.map(i =>
-        `<label class="chip"><input type="checkbox" data-k="${i.k}" ${marcados[i.k] ? 'checked' : ''}>${i.d}</label>`).join('')}</div>` : '';
+        `<label class="chip"><input type="checkbox" data-k="${i.k}" ${marcados[i.k] ? 'checked' : ''}>${i.d}<button type="button" class="inf" data-info="${i.k}">ⓘ</button></label>`).join('')}</div>` : '';
     };
     div.innerHTML = `<div class="ph"><div><strong>${p.nombre}</strong> <small>${p.dn} (${p.cur})</small></div>
       <div><small class="cnt"></small> <button data-all>Marcar todo</button></div></div>
@@ -107,6 +116,7 @@ lista.addEventListener('change', e => {
   guardar(); refrescar();
 });
 lista.addEventListener('click', e => {
+  if (e.target.dataset.info) { e.preventDefault(); ficha(e.target.dataset.info); return; }
   if (!e.target.dataset.all) return;
   const p = paises.find(x => x.id === e.target.closest('.pais-card').id);
   const todo = stats(p).g === p.items.length;
@@ -182,6 +192,30 @@ function refrescar() {
   document.getElementById('tot').textContent = `${G} de ${T} piezas (${(G / T * 100).toFixed(1)}%)`;
   if (rutas) rutas.style('fill', d => { const p = porIso[+d.id]; return p ? color(stats(p).pct) : '#cfcfcf'; });
   panelContinentes();
+}
+async function ficha(k) {
+  const [nombre, t, d] = k.split('|');
+  const p = paises.find(x => x.nombre === nombre);
+  const dlg = document.getElementById('ficha');
+  dlg.innerHTML = `<h3></h3><p id="ftxt">Cargando…</p><a id="flink" target="_blank" hidden>Leer más en Wikipedia</a><br>
+                   <button onclick="this.closest('dialog').close()">Cerrar</button>`;
+  dlg.querySelector('h3').textContent = `${t === 'M' ? 'Moneda' : 'Billete'} de ${d} · ${p.dn}`;
+  dlg.showModal();
+
+  const txt = document.getElementById('ftxt');
+  const propio = HISTORIA[`${p.cur}|${t}|${d}`] || HISTORIA[`${p.cur}|*`];
+  if (propio) { txt.textContent = propio; return; }
+
+  try {
+    const r = await fetch('https://es.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(p.dn));
+    if (!r.ok) throw new Error();
+    const j = await r.json();
+    txt.textContent = j.extract;
+    const a = document.getElementById('flink');
+    a.href = j.content_urls.desktop.page; a.hidden = false;
+  } catch {
+    txt.textContent = 'Todavía no hay información de esta pieza. Puedes añadirla en historia.js.';
+  }
 }
 refrescar();
 //Exportar coleccion a un archivo JSON
