@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mi colección numismática</title>
+<script>try{const t=localStorage.getItem('tema');if(t)document.documentElement.dataset.theme=t}catch{}</script>
 <style>
-:root{--bg:#f6f4ef;--card:#fff;--tx:#222;--mut:#777;--bd:#ddd;--ac:#2e7d32}
-@media(prefers-color-scheme:dark){:root{--bg:#1b1c1e;--card:#26282b;--tx:#eee;--mut:#999;--bd:#3a3d41;--ac:#66bb6a}}
-*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+:root{--bg:#f6f4ef;--card:#fff;--tx:#222;--mut:#777;--bd:#ddd;--ac:#2e7d32;--vacio:#e9e9e9}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1c1e;--card:#26282b;--tx:#eee;--mut:#999;--bd:#3a3d41;--ac:#66bb6a;--vacio:#3a3d41}}
+:root[data-theme="dark"]{--bg:#1b1c1e;--card:#26282b;--tx:#eee;--mut:#999;--bd:#3a3d41;--ac:#66bb6a;--vacio:#3a3d41}*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
 header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 h1{font-size:18px;margin:0}#tot{color:var(--mut);font-size:13px}
 #q{flex:1;min-width:200px;max-width:380px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
@@ -27,6 +28,27 @@ details.cont>summary{padding:12px 16px;font-weight:600;cursor:pointer}
 .chip{border:1px solid var(--bd);border-radius:16px;padding:2px 10px;cursor:pointer;user-select:none;font-size:13px}
 .chip input{display:none}.chip:has(input:checked){background:var(--ac);border-color:var(--ac);color:#fff}
 .bar{height:4px;background:var(--bd);border-radius:2px;margin-top:6px}.bar i{display:block;height:100%;background:var(--ac);border-radius:2px}
+header button{padding: 7px 12px;border:1px solid var(--bd);border-radius: 8px;background:var(--bg);color:var(--tx);cursor:pointer}
+header button:hover{border-color: var(--ac);}
+#conts{position:absolute;left:14px;bottom:14px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;width:210px;font-size:12px;opacity:.95}
+.cp{margin-bottom:6px}.cp:last-child{margin-bottom:0}
+.cp span{display:inline-block;width:130px}.cp b{float:right}
+@media(max-width:700px){#conts{position:static;width:auto;margin-top:8px}}
+/*ficha*/
+#ficha{max-width:460px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);padding:20px}
+#ficha::backdrop{background:rgba(0,0,0,.5)}
+#ficha h3{margin:0 0 10px}#ficha a{color:var(--ac);font-size:13px}
+#ficha button{margin-top:14px;padding:6px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer}
+.inf{border:0;background:none;color:var(--mut);cursor:pointer;padding:0 0 0 6px;font-size:12px}
+.chip:has(input:checked) .inf{color:#fff}
+#tema{padding:6px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer;font-size:15px}
+#tema:hover{border-color:var(--ac)}
+/*solo*/
+.solo{font-size: 13px;display: flex;gap: 6px;align-items: center;cursor: pointer;}
+/*oculta la fila si NO contiene ninguna casilla sin marcar*/
+.solo-faltan .chip.chip:has(input:checked){display: none;}
+.solo-faltan .fila:not(:has(input:not(:checked))){display: none}
+.solo-faltan .pais-card.completo{display: none}
 </style>
 </head>
 <body>
@@ -34,17 +56,24 @@ details.cont>summary{padding:12px 16px;font-weight:600;cursor:pointer}
   <h1>🪙 Mi colección</h1>
   <input id="q" list="paises" placeholder="Buscar país… (Enter para ir)">
   <datalist id="paises"></datalist>
+  <label class="solo"><input type="checkbox" id="solo">Solo los que faltan</label>
   <span id="tot"></span>
+  <button id="tema" title="Cambiar tema">🌓</button>
+  <button id="exp">⬇ Exportar</button>
+  <button id="imp">⬆ Importar</button>
+  <input type="file" id="file" accept=".json" hidden>
 </header>
 <main>
-  <div id="mapa"><span id="cargando" style="color:var(--mut)">Cargando mapa…</span></div>
+  <div id="mapa"><span id="cargando" style="color:var(--mut)">Cargando mapa…</span><div id="conts"></div></div>
   <div id="lista"></div>
 </main>
+<dialog id="ficha"></dialog>
 <div id="tip"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.0.1/dist/topojson-client.min.js"></script>
 <script src="data.js"></script>
+<script src="historia.js"></script>
 <script>
 const KEY = 'coleccion-numismatica';
 let marcados = JSON.parse(localStorage.getItem(KEY) || '{}');
@@ -70,7 +99,7 @@ function stats(p) {
   const falta = tipo => p.items.filter(i => i.t === tipo && !marcados[i.k]).map(i => i.d);
   return {t, g, pct: t ? g / t : 0, fm: falta('M'), fb: falta('B')};
 }
-const color = pct => pct === 0 ? '#e9e9e9' : d3.interpolateYlGn(0.25 + 0.75 * pct);
+const color = pct => pct === 0 ? 'var(--vacio)' : d3.interpolateYlGn(0.25 + 0.75 * pct);
 
 // Listado
 const lista = document.getElementById('lista');
@@ -82,7 +111,7 @@ Object.keys(PAISES).forEach(cont => {
     const fila = (t, nom) => {
       const its = p.items.filter(i => i.t === t);
       return its.length ? `<div class="fila"><em>${nom}</em>${its.map(i =>
-        `<label class="chip"><input type="checkbox" data-k="${i.k}" ${marcados[i.k] ? 'checked' : ''}>${i.d}</label>`).join('')}</div>` : '';
+        `<label class="chip"><input type="checkbox" data-k="${i.k}" ${marcados[i.k] ? 'checked' : ''}>${i.d}<button type="button" class="inf" data-info="${i.k}">ⓘ</button></label>`).join('')}</div>` : '';
     };
     div.innerHTML = `<div class="ph"><div><strong>${p.nombre}</strong> <small>${p.dn} (${p.cur})</small></div>
       <div><small class="cnt"></small> <button data-all>Marcar todo</button></div></div>
@@ -98,6 +127,7 @@ lista.addEventListener('change', e => {
   guardar(); refrescar();
 });
 lista.addEventListener('click', e => {
+  if (e.target.dataset.info) { e.preventDefault(); ficha(e.target.dataset.info); return; }
   if (!e.target.dataset.all) return;
   const p = paises.find(x => x.id === e.target.closest('.pais-card').id);
   const todo = stats(p).g === p.items.length;
@@ -146,12 +176,23 @@ function buscar() {
 q.addEventListener('change', buscar);
 q.addEventListener('keydown', e => e.key === 'Enter' && buscar());
 
+function panelContinentes(){
+  document.getElementById('conts').innerHTML = Object.keys(PAISES).map(c => {
+    const ps = paises.filter(p => p.cont === c);
+    const g = ps.reduce((a,p) => a + stats(p).g,0);
+    const t = ps.reduce((a,p) => a + p.items.length,0);
+    const pct = t ? g /t *100: 0;
+    return `<div class="cp"><span>${c}</span><b>${g}/${t}</b>
+            <div class="bar"><i style="width:${pct}%"></i></div></div>`;
+  }).join('');
+}
 // Refrescar interfaz
 function refrescar() {
   let T = 0, G = 0;
   paises.forEach(p => {
     const s = stats(p); T += s.t; G += s.g;
     const el = document.getElementById(p.id);
+    el.classList.toggle('completo',s.t > 0 && s.g === s.t);
     el.querySelector('.cnt').textContent = `${s.g}/${s.t}`;
     el.querySelector('.bar i').style.width = s.pct * 100 + '%';
   });
@@ -162,8 +203,74 @@ function refrescar() {
   });
   document.getElementById('tot').textContent = `${G} de ${T} piezas (${(G / T * 100).toFixed(1)}%)`;
   if (rutas) rutas.style('fill', d => { const p = porIso[+d.id]; return p ? color(stats(p).pct) : '#cfcfcf'; });
+  panelContinentes();
 }
+async function ficha(k) {
+  const [nombre, t, d] = k.split('|');
+  const p = paises.find(x => x.nombre === nombre);
+  const dlg = document.getElementById('ficha');
+  dlg.innerHTML = `<h3></h3><p id="ftxt">Cargando…</p><a id="flink" target="_blank" hidden>Leer más en Wikipedia</a><br>
+                   <button onclick="this.closest('dialog').close()">Cerrar</button>`;
+  dlg.querySelector('h3').textContent = `${t === 'M' ? 'Moneda' : 'Billete'} de ${d} · ${p.dn}`;
+  dlg.showModal();
+
+  const txt = document.getElementById('ftxt');
+  const propio = HISTORIA[`${p.cur}|${t}|${d}`] || HISTORIA[`${p.cur}|*`];
+  if (propio) { txt.textContent = propio; return; }
+
+  try {
+    const r = await fetch('https://es.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(p.dn));
+    if (!r.ok) throw new Error();
+    const j = await r.json();
+    txt.textContent = j.extract;
+    const a = document.getElementById('flink');
+    a.href = j.content_urls.desktop.page; a.hidden = false;
+  } catch {
+    txt.textContent = 'Todavía no hay información de esta pieza. Puedes añadirla en historia.js.';
+  }
+}
+document.getElementById('tema').onclick = () => {
+  const html = document.documentElement;
+  const actual =  html.dataset.theme || (matchMedia('(prefers-color-shceme: dark)').matches ? 'dark' : 'light');
+  const nuevo = actual === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = nuevo;
+  localStorage.setItem('tema',nuevo);
+};
 refrescar();
+const solo = document.getElementById('solo');
+const aplicarSolo = () => document.body.classList.toggle('solo-faltan',solo.checked);
+solo.checked = localStorage.getItem('solo') === '1';
+aplicarSolo();
+solo.onchange = () => {
+  aplicarSolo();
+  localStorage.setItem('solo',solo.checked ? '1' : '0');
+};
+//Exportar coleccion a un archivo JSON
+document.getElementById('exp').onclick = () => {
+  const blob = new Blob([JSON.stringify(marcados,null,2)],{type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'coleccion-' + new Date().toISOString().slice(0,10)+'json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+//Importar coleccion desde un archivo JSON
+document.getElementById('imp').onclick = () => document.getElementById('file').click();
+document.getElementById('file').onchange = async e => {
+  const f = e.target.files[0];
+  if(!f) return ;
+  try {
+    const datos = JSON.parse(await f.text());
+    if(typeof datos !== 'object' || Array.isArray(datos)) throw new Error('formato');
+    marcados = datos;
+    guardar();
+    document.querySelectorAll('input[data-k]').forEach(c => c.checked = !!marcados[c.dataset.k]);
+    refrescar();
+  } catch {
+    alert('El archivo no es una colección válida');
+  }
+  e.target.value = '';
+};
 </script>
 </body>
 </html>
