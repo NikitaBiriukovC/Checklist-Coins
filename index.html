@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mi colección numismática</title>
+<script>try{const t=localStorage.getItem('tema');if(t)document.documentElement.dataset.theme=t}catch{}</script>
 <style>
-:root{--bg:#f6f4ef;--card:#fff;--tx:#222;--mut:#777;--bd:#ddd;--ac:#2e7d32}
-@media(prefers-color-scheme:dark){:root{--bg:#1b1c1e;--card:#26282b;--tx:#eee;--mut:#999;--bd:#3a3d41;--ac:#66bb6a}}
-*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+:root{--bg:#f6f4ef;--card:#fff;--tx:#222;--mut:#777;--bd:#ddd;--ac:#2e7d32;--vacio:#e9e9e9}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1c1e;--card:#26282b;--tx:#eee;--mut:#999;--bd:#3a3d41;--ac:#66bb6a;--vacio:#3a3d41}}
+:root[data-theme="dark"]{--bg:#1b1c1e;--card:#26282b;--tx:#eee;--mut:#999;--bd:#3a3d41;--ac:#66bb6a;--vacio:#3a3d41}*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
 header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 h1{font-size:18px;margin:0}#tot{color:var(--mut);font-size:13px}
 #q{flex:1;min-width:200px;max-width:380px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
@@ -40,6 +41,8 @@ header button:hover{border-color: var(--ac);}
 #ficha button{margin-top:14px;padding:6px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer}
 .inf{border:0;background:none;color:var(--mut);cursor:pointer;padding:0 0 0 6px;font-size:12px}
 .chip:has(input:checked) .inf{color:#fff}
+#tema{padding:6px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer;font-size:15px}
+#tema:hover{border-color:var(--ac)}
 </style>
 </head>
 <body>
@@ -48,6 +51,7 @@ header button:hover{border-color: var(--ac);}
   <input id="q" list="paises" placeholder="Buscar país… (Enter para ir)">
   <datalist id="paises"></datalist>
   <span id="tot"></span>
+  <button id="tema" title="Cambiar tema">🌓</button>
   <button id="exp">⬇ Exportar</button>
   <button id="imp">⬆ Importar</button>
   <input type="file" id="file" accept=".json" hidden>
@@ -88,7 +92,7 @@ function stats(p) {
   const falta = tipo => p.items.filter(i => i.t === tipo && !marcados[i.k]).map(i => i.d);
   return {t, g, pct: t ? g / t : 0, fm: falta('M'), fb: falta('B')};
 }
-const color = pct => pct === 0 ? '#e9e9e9' : d3.interpolateYlGn(0.25 + 0.75 * pct);
+const color = pct => pct === 0 ? 'var(--vacio)' : d3.interpolateYlGn(0.25 + 0.75 * pct);
 
 // Listado
 const lista = document.getElementById('lista');
@@ -217,6 +221,13 @@ async function ficha(k) {
     txt.textContent = 'Todavía no hay información de esta pieza. Puedes añadirla en historia.js.';
   }
 }
+document.getElementById('tema').onclick = () => {
+  const html = document.documentElement;
+  const actual =  html.dataset.theme || (matchMedia('(prefers-color-shceme: dark)').matches ? 'dark' : 'light');
+  const nuevo = actual === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = nuevo;
+  localStorage.setItem('tema',nuevo);
+};
 refrescar();
 //Exportar coleccion a un archivo JSON
 document.getElementById('exp').onclick = () => {
