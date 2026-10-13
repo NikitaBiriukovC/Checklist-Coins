@@ -43,6 +43,12 @@ header button:hover{border-color: var(--ac);}
 .chip:has(input:checked) .inf{color:#fff}
 #tema{padding:6px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer;font-size:15px}
 #tema:hover{border-color:var(--ac)}
+/*solo*/
+.solo{font-size: 13px;display: flex;gap: 6px;align-items: center;cursor: pointer;}
+/*oculta la fila si NO contiene ninguna casilla sin marcar*/
+.solo-faltan .chip.chip:has(input:checked){display: none;}
+.solo-faltan .fila:not(:has(input:not(:checked))){display: none}
+.solo-faltan .pais-card.completo{display: none}
 </style>
 </head>
 <body>
@@ -50,6 +56,7 @@ header button:hover{border-color: var(--ac);}
   <h1>🪙 Mi colección</h1>
   <input id="q" list="paises" placeholder="Buscar país… (Enter para ir)">
   <datalist id="paises"></datalist>
+  <label class="solo"><input type="checkbox" id="solo">Solo los que faltan</label>
   <span id="tot"></span>
   <button id="tema" title="Cambiar tema">🌓</button>
   <button id="exp">⬇ Exportar</button>
@@ -185,6 +192,7 @@ function refrescar() {
   paises.forEach(p => {
     const s = stats(p); T += s.t; G += s.g;
     const el = document.getElementById(p.id);
+    el.classList.toggle('completo',s.t > 0 && s.g === s.t);
     el.querySelector('.cnt').textContent = `${s.g}/${s.t}`;
     el.querySelector('.bar i').style.width = s.pct * 100 + '%';
   });
@@ -229,6 +237,14 @@ document.getElementById('tema').onclick = () => {
   localStorage.setItem('tema',nuevo);
 };
 refrescar();
+const solo = document.getElementById('solo');
+const aplicarSolo = () => document.body.classList.toggle('solo-faltan',solo.checked);
+solo.checked = localStorage.getItem('solo') === '1';
+aplicarSolo();
+solo.onchange = () => {
+  aplicarSolo();
+  localStorage.setItem('solo',solo.checked ? '1' : '0');
+};
 //Exportar coleccion a un archivo JSON
 document.getElementById('exp').onclick = () => {
   const blob = new Blob([JSON.stringify(marcados,null,2)],{type: 'application/json'});
