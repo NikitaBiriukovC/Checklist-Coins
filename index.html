@@ -49,6 +49,14 @@ header button:hover{border-color: var(--ac);}
 .solo-faltan .chip.chip:has(input:checked){display: none;}
 .solo-faltan .fila:not(:has(input:not(:checked))){display: none}
 .solo-faltan .pais-card.completo{display: none}
+/*Historial*/
+#tabs{display:flex;gap:6px;margin-bottom:14px}
+#tabs button{padding:8px 16px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);cursor:pointer}
+#tabs button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+#hist{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.hrow{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bd);cursor:pointer}
+.hrow:hover{background:var(--bg)}.hrow small{color:var(--mut);white-space:nowrap}
+.nota{color:var(--mut);font-size:13px;padding:10px 14px}
 </style>
 </head>
 <body>
@@ -64,8 +72,17 @@ header button:hover{border-color: var(--ac);}
   <input type="file" id="file" accept=".json" hidden>
 </header>
 <main>
-  <div id="mapa"><span id="cargando" style="color:var(--mut)">Cargando mapa…</span><div id="conts"></div></div>
-  <div id="lista"></div>
+  <nav id="tabs">
+    <button data-tab="coleccion" class="on">Colección</button>
+    <button data-tab="historial">Historial</button>
+  </nav>
+
+  <section id="tab-coleccion">
+    <div id="mapa"> … (lo que ya tienes) … </div>
+    <div id="lista"></div>
+  </section>
+
+  <section id="tab-historial" hidden><div id="hist"></div></section>
 </main>
 <dialog id="ficha"></dialog>
 <div id="tip"></div>
@@ -123,7 +140,7 @@ Object.keys(PAISES).forEach(cont => {
 
 lista.addEventListener('change', e => {
   const k = e.target.dataset.k; if (!k) return;
-  e.target.checked ? marcados[k] = 1 : delete marcados[k];
+  e.target.checked ? marcados[k] = Date.now() : delete marcados[k];
   guardar(); refrescar();
 });
 lista.addEventListener('click', e => {
@@ -131,7 +148,7 @@ lista.addEventListener('click', e => {
   if (!e.target.dataset.all) return;
   const p = paises.find(x => x.id === e.target.closest('.pais-card').id);
   const todo = stats(p).g === p.items.length;
-  p.items.forEach(i => todo ? delete marcados[i.k] : marcados[i.k] = 1);
+  p.items.forEach(i => todo ? delete marcados[i.k] : marcados[i.k] =  marcados[i.k] || Date.now());
   guardar();
   e.target.closest('.pais-card').querySelectorAll('input').forEach(c => c.checked = !todo);
   refrescar();
@@ -163,6 +180,7 @@ d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').the
 const dl = document.getElementById('paises'), q = document.getElementById('q');
 paises.forEach(p => dl.insertAdjacentHTML('beforeend', `<option value="${p.nombre}">`));
 function ir(p) {
+  tab('coleccion');
   const el = document.getElementById(p.id);
   el.closest('details').open = true;
   el.scrollIntoView({behavior: 'smooth', block: 'start'});
@@ -204,6 +222,7 @@ function refrescar() {
   document.getElementById('tot').textContent = `${G} de ${T} piezas (${(G / T * 100).toFixed(1)}%)`;
   if (rutas) rutas.style('fill', d => { const p = porIso[+d.id]; return p ? color(stats(p).pct) : '#cfcfcf'; });
   panelContinentes();
+  pintarHistorial();
 }
 async function ficha(k) {
   const [nombre, t, d] = k.split('|');
@@ -236,6 +255,37 @@ document.getElementById('tema').onclick = () => {
   html.dataset.theme = nuevo;
   localStorage.setItem('tema',nuevo);
 };
+// ---------- Pestañas ----------
+function tab(n) {
+  ['coleccion', 'historial'].forEach(x => {
+    document.getElementById('tab-' + x).hidden = x !== n;
+    document.querySelector(`#tabs [data-tab="${x}"]`).classList.toggle('on', x === n);
+  });
+}
+document.getElementById('tabs').addEventListener('click', e => e.target.dataset.tab && tab(e.target.dataset.tab));
+
+// ---------- Historial ----------
+function pintarHistorial() {
+  const todos = [];
+  let sinFecha = 0;
+  paises.forEach(p => p.items.forEach(i => {
+    const v = marcados[i.k];
+    if (v > 1) todos.push({p, i, v}); else if (v) sinFecha++;
+  }));
+  todos.sort((a, b) => b.v - a.v);
+  const fmt = v => new Date(v).toLocaleDateString('es-ES', {day: 'numeric', month: 'short', year: 'numeric'});
+  const filas = todos.slice(0, 20).map(({p, i, v}) =>
+    `<div class="hrow" data-id="${p.id}">
+       <span>${i.t === 'M' ? '🪙 Moneda' : '💶 Billete'} de ${i.d} · <b>${p.nombre}</b></span>
+       <small>${fmt(v)}</small></div>`).join('');
+  document.getElementById('hist').innerHTML =
+    (filas || '<div class="nota">Aún no hay piezas con fecha. Marca alguna y aparecerá aquí.</div>') +
+    (sinFecha ? `<div class="nota">${sinFecha} piezas anteriores sin fecha registrada.</div>` : '');
+}
+document.getElementById('hist').addEventListener('click', e => {
+  const r = e.target.closest('.hrow');
+  if (r) ir(paises.find(p => p.id === r.dataset.id));
+});
 refrescar();
 const solo = document.getElementById('solo');
 const aplicarSolo = () => document.body.classList.toggle('solo-faltan',solo.checked);
