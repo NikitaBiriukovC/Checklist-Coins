@@ -1,0 +1,62 @@
+// Formato de claves:
+//   "DIVISA|M|valor"  -> una moneda concreta      (ej. "EUR|M|2")
+//   "DIVISA|B|valor"  -> un billete concreto      (ej. "EUR|B|50")
+//   "DIVISA|*"        -> texto general de la divisa (se usa si no hay ficha de la pieza)
+const HISTORIA = {
+
+// ───────── EURO: fichas por pieza ─────────
+"EUR|*": "El euro entró en circulación en efectivo el 1 de enero de 2002 (como moneda contable existía desde 1999). Lo emite el Banco Central Europeo junto a los bancos centrales nacionales. Las monedas tienen una cara común y otra nacional distinta en cada país, y todas valen en toda la eurozona.",
+"EUR|M|1c": "Acero recubierto de cobre. La cara común, obra del belga Luc Luycx, muestra Europa en distintos planos según la serie; la cara nacional es distinta en cada país.",
+"EUR|M|2c": "Acero recubierto de cobre, con borde liso con una ranura. La cara común muestra Europa; cada país elige su diseño nacional.",
+"EUR|M|5c": "Acero recubierto de cobre, de borde liso. Es la mayor de las tres monedas rojizas de céntimos.",
+"EUR|M|10c": "Primera de las monedas de 'oro nórdico', una aleación dorada de cobre, aluminio, zinc y estaño. Borde acanalado.",
+"EUR|M|20c": "De oro nórdico, con borde de siete muescas ('flor española'), pensado para que las personas con discapacidad visual la distingan por tacto.",
+"EUR|M|50c": "De oro nórdico y borde acanalado. La cara común muestra el mapa de la Unión Europea sobre líneas.",
+"EUR|M|1": "Bimetálica: anillo plateado (cuproníquel) y centro dorado (latón). La cara común, de Luc Luycx, muestra un mapa de Europa con las fronteras abiertas.",
+"EUR|M|2": "Bimetálica, con el borde decorado con inscripciones que cada país elige. Cada año los países pueden emitir monedas conmemorativas de 2 euros, que son de curso legal en toda la eurozona y muy buscadas por coleccionistas.",
+"EUR|B|5": "Serie Europa (2013). Color gris. Su diseño, inspirado en el estilo clásico, usa ventanas y puertas como símbolo de apertura. Lleva el retrato de Europa (mitología griega) en marca de agua y holograma.",
+"EUR|B|10": "Serie Europa (2014). Color rojo. Representa el estilo románico: arcos y puentes simbolizan la unión entre los pueblos.",
+"EUR|B|20": "Serie Europa (2015). Color azul. Representa el gótico, con ventanas de catedral y un puente ilustrativo.",
+"EUR|B|50": "Serie Europa (2017). Color naranja. Representa el Renacimiento, con puertas y un puente. Es el billete más usado de la zona euro.",
+"EUR|B|100": "Serie Europa (2019). Color verde. Representa el barroco y rococó. Incorpora una banda holográfica con un número esmeralda.",
+"EUR|B|200": "Serie Europa (2019). Color amarillo parduzco. Representa la arquitectura de hierro y cristal del siglo XIX.",
+"EUR|B|500": "Se dejó de emitir en 2019 por su asociación con actividades ilícitas, pero sigue teniendo valor legal. Color morado. Representa la arquitectura moderna del siglo XX. Se le llama coloquialmente 'Bin Laden' en España.",
+
+// ───────── Divisas principales: textos generales ─────────
+"USD|*": "El dólar estadounidense nació con la Coinage Act de 1792. Los billetes llevan retratos de presidentes y otras figuras: Washington (1), Jefferson (2), Lincoln (5), Hamilton (10), Jackson (20), Grant (50) y Franklin (100). Los billetes de la Reserva Federal tienen el mismo tamaño y un color verde característico en el reverso.",
+"USD|B|1": "Lleva a George Washington, basado en un retrato de Gilbert Stuart. En el reverso aparece el Gran Sello de Estados Unidos: la pirámide con el ojo y el águila.",
+"USD|B|2": "Con Thomas Jefferson. En el reverso aparece una reproducción del cuadro 'Declaración de Independencia' de John Trumbull. Es poco usado, por lo que mucha gente lo cree raro, pero sigue emitiéndose.",
+"USD|B|100": "Con Benjamin Franklin, que nunca fue presidente. La serie de 2013 incorporó una banda azul 3D y una campana en un tintero que cambia de color.",
+"GBP|*": "La libra esterlina es una de las divisas más antiguas aún en uso: su origen se remonta a la época anglosajona. Se decimalizó el 15 de febrero de 1971. Desde 2022 las monedas y los billetes incorporan la efigie de Carlos III. Escocia e Irlanda del Norte tienen además billetes emitidos por sus propios bancos.",
+"GBP|M|50p": "Moneda heptagonal (siete lados) introducida en 1969, y la primera de este tipo en el mundo.",
+"GBP|M|1": "Desde 2017 es de doce lados y bimetálica, con medidas de seguridad para sustituir a la antigua redonda.",
+"GBP|B|5": "De polímero (2016), con Winston Churchill. Es más resistente al agua y a la suciedad que el papel.",
+"GBP|B|10": "De polímero (2017), con Jane Austen. En la cara aparece una cita de 'Orgullo y prejuicio' y una ilustración de la mansión de Godmersham Park.",
+"GBP|B|20": "De polímero (2020), con el pintor J. M. W. Turner. Incorpora ventanas transparentes con un efecto metálico.",
+"GBP|B|50": "De polímero (2021), con el matemático Alan Turing, que descifró el código Enigma y es considerado un padre de la informática.",
+"JPY|*": "El yen se instauró en 1871 con la Ley de Nueva Moneda de Meiji. El carácter 円 significa 'redondo'. Las monedas de 5 y 50 yenes tienen un agujero central. La moneda de 5 yenes se asocia con la buena suerte porque 'go-en' suena como 'destino favorable'.",
+"JPY|B|1000": "La serie de 2024 incluye el retrato de Kitasato Shibasaburō, bacteriólogo, y en el reverso 'La gran ola de Kanagawa' de Hokusai.",
+"JPY|B|5000": "La serie de 2024 lleva a Tsuda Umeko, pionera de la educación femenina en Japón.",
+"JPY|B|10000": "La serie de 2024 lleva a Shibusawa Eiichi, llamado el 'padre del capitalismo japonés', con un holograma 3D, el primero en un billete japonés.",
+"CHF|*": "El franco suizo se creó en 1850. Las monedas llevan la palabra 'Helvetia' y de ahí viene el código de país CH. Los billetes suizos son célebres por su diseño y por sus medidas de seguridad. Liechtenstein también lo usa.",
+"CAD|*": "El dólar canadiense existe desde 1858. La moneda de 1 dólar se llama 'loonie' (por el colimbo grande que lleva, desde 1987) y la de 2 dólares 'toonie' (bimetálica, desde 1996). El penique se dejó de acuñar en 2012 y se retiró de la circulación en 2013. Desde 2011 los billetes son de polímero.",
+"AUD|*": "El dólar australiano reemplazó a la libra en 1966. En 1988 Australia emitió el primer billete de polímero del mundo (el de 10 dólares), y la serie completa se introdujo entre 1992 y 1996. Las monedas de 1 y 2 centavos se retiraron en 1992.",
+"CNY|*": "El renminbi ('moneda del pueblo') lo emite el Banco Popular de China desde 1948. El yuan es su unidad principal. Todos los billetes de la quinta serie (1999) llevan el retrato de Mao Zedong.",
+"INR|*": "La palabra rupia deriva del sánscrito 'rupya' (plata). Los billetes de la serie Mahatma Gandhi llevan su retrato. En 2016 se retiraron los billetes de 500 y 1000 rupias y se emitieron nuevos de 500 y 2000 (este último dejó de circular en 2023). Cada billete muestra su valor en 15 idiomas.",
+"BRL|*": "El real se instauró en 1994 con el Plan Real, que puso fin a la hiperinflación. Los billetes de la segunda familia muestran animales autóctonos: tortuga marina (2), garza (5), guacamayo (10), tamarino león dorado (20), jaguar (50), mero (100) y lobo de crin (200). Todos llevan la efigie de la República.",
+"MXN|*": "El peso mexicano desciende del peso español (real de a ocho), del que viene también el símbolo '$'. En 1993 se eliminaron tres ceros y se creó el 'nuevo peso'. Los billetes de la familia G presentan figuras de la historia de México y se imprimen en papel y polímero.",
+"RUB|*": "El rublo es una de las monedas más antiguas de Europa: se usa desde los siglos XIII-XIV. El símbolo ₽ se adoptó oficialmente en 2013.",
+"TRY|*": "La lira turca se rebautizó en 2005 con la eliminación de seis ceros ('nueva lira turca'). Todos los billetes llevan la imagen de Mustafa Kemal Atatürk, fundador de la república.",
+"KRW|*": "El won surcoreano usa a figuras históricas: Yi Hwang (1000), Yi I (5000), el rey Sejong (10 000) y Shin Saimdang (50 000), primera mujer en un billete del país. La moneda de 500 won muestra una grulla y la de 100 won al almirante Yi Sun-sin.",
+"SEK|*": "Suecia emitió en 1661 los primeros billetes de Europa. La serie actual (2015-2016) homenajea a figuras culturales: Astrid Lindgren (20), Evert Taube (50), Greta Garbo (100), Ingmar Bergman (200), Birgit Nilsson (500) y Dag Hammarskjöld (1000).",
+"NOK|*": "Los billetes noruegos de la serie actual tienen como tema 'el mar', con reversos diseñados por el estudio Metric y anversos por Snøhetta.",
+"DKK|*": "Las monedas danesas de 50 øre, 1, 2 y 5 coronas tienen un agujero central. La serie de billetes actual muestra puentes daneses.",
+"PLN|*": "Złoty significa 'dorado'. Los billetes llevan reyes polacos: Mieszko I (10), Boleslao I el Bravo (20), Casimiro III el Grande (50), Ladislao II Jagellón (100), Segismundo I (200) y Juan III Sobieski (500).",
+"CZK|*": "Los billetes llevan figuras históricas checas: Carlos IV (100), Jan Amos Comenius (200), Božena Němcová (500), František Palacký (1000), Ema Destinnová (2000) y Tomáš Masaryk (5000).",
+"HUF|*": "El forinto se introdujo en 1946 tras la mayor hiperinflación de la historia. Los billetes llevan figuras históricas húngaras: Rákóczi II (500), Matías Corvino (1000), Bethlen (2000), Széchenyi (5000), San Esteban (10 000) y Deák (20 000).",
+"ZAR|*": "El rand se llama así por el Witwatersrand, la zona minera de oro de Johannesburgo. Desde 2012 todos los billetes llevan el retrato de Nelson Mandela, y en el reverso aparecen los 'cinco grandes' animales: rinoceronte, elefante, león, búfalo y leopardo.",
+"MAD|*": "El dírham marroquí se creó en 1960. Las monedas y billetes actuales llevan la efigie del rey Mohamed VI.",
+"EGP|*": "Los billetes egipcios llevan texto en árabe por un lado y en inglés por otro, y muestran monumentos del Antiguo Egipto junto a mezquitas históricas.",
+"COP|*": "El peso colombiano lleva a figuras de la historia y la cultura del país. El billete de 50 000 pesos homenajea a Gabriel García Márquez, premio Nobel de Literatura.",
+"ARS|*": "El peso argentino ha sufrido varias reconversiones por la inflación. Los billetes de la serie de 2016-2018 sustituyeron a los prohombres históricos por animales autóctonos de las regiones del país."
+};
