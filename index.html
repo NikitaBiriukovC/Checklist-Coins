@@ -4,17 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mi colección numismática</title>
+<script>try{const t=localStorage.getItem('tema');if(t)document.documentElement.dataset.theme=t}catch{}</script>
 <style>
-:root{--bg:#f6f4ef;--card:#fff;--tx:#222;--mut:#777;--bd:#ddd;--ac:#2e7d32}
-@media(prefers-color-scheme:dark){:root{--bg:#1b1c1e;--card:#26282b;--tx:#eee;--mut:#999;--bd:#3a3d41;--ac:#66bb6a}}
-*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+:root{--bg:#f6f4ef;--card:#fff;--tx:#222;--mut:#777;--bd:#ddd;--ac:#2e7d32;--vacio:#e9e9e9}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1c1e;--card:#26282b;--tx:#eee;--mut:#999;--bd:#3a3d41;--ac:#66bb6a;--vacio:#3a3d41}}
+:root[data-theme="dark"]{--bg:#1b1c1e;--card:#26282b;--tx:#eee;--mut:#999;--bd:#3a3d41;--ac:#66bb6a;--vacio:#3a3d41}*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
 header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 h1{font-size:18px;margin:0}#tot{color:var(--mut);font-size:13px}
 #q{flex:1;min-width:200px;max-width:380px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
 main{max-width:1100px;margin:0 auto;padding:16px}
 #mapa{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px;position:relative}
 #mapa svg{width:100%;height:auto;display:block}
-.pais{stroke:var(--bd);stroke-width:.4;cursor:pointer}.pais:hover{stroke:var(--tx);stroke-width:1}
+.pais{stroke:var(--bd);stroke-width:.4;cursor:pointer;vector-effect: non-scaling-stroke;}.pais:hover{stroke:var(--tx);stroke-width:1}
 #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:8px 10px;border-radius:8px;font-size:12px;max-width:280px;display:none;z-index:9}
 #tip b{display:block;margin-bottom:2px}
 details.cont{margin-top:14px;background:var(--card);border:1px solid var(--bd);border-radius:12px}
@@ -27,6 +28,45 @@ details.cont>summary{padding:12px 16px;font-weight:600;cursor:pointer}
 .chip{border:1px solid var(--bd);border-radius:16px;padding:2px 10px;cursor:pointer;user-select:none;font-size:13px}
 .chip input{display:none}.chip:has(input:checked){background:var(--ac);border-color:var(--ac);color:#fff}
 .bar{height:4px;background:var(--bd);border-radius:2px;margin-top:6px}.bar i{display:block;height:100%;background:var(--ac);border-radius:2px}
+header button{padding: 7px 12px;border:1px solid var(--bd);border-radius: 8px;background:var(--bg);color:var(--tx);cursor:pointer}
+header button:hover{border-color: var(--ac);}
+#conts{position:absolute;left:14px;bottom:14px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;width:210px;font-size:12px;opacity:.95}
+.cp{margin-bottom:6px}.cp:last-child{margin-bottom:0}
+.cp span{display:inline-block;width:130px}.cp b{float:right}
+@media(max-width:700px){#conts{position:static;width:auto;margin-top:8px}}
+/*ficha*/
+#ficha{max-width:460px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);padding:20px}
+#ficha::backdrop{background:rgba(0,0,0,.5)}
+#ficha h3{margin:0 0 10px}#ficha a{color:var(--ac);font-size:13px}
+#ficha button{margin-top:14px;padding:6px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer}
+.inf{border:0;background:none;color:var(--mut);cursor:pointer;padding:0 0 0 6px;font-size:12px}
+.chip:has(input:checked) .inf{color:#fff}
+#tema{padding:6px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer;font-size:15px}
+#tema:hover{border-color:var(--ac)}
+/*solo*/
+.solo{font-size: 13px;display: flex;gap: 6px;align-items: center;cursor: pointer;}
+/*oculta la fila si NO contiene ninguna casilla sin marcar*/
+.solo-faltan .chip.chip:has(input:checked){display: none;}
+.solo-faltan .fila:not(:has(input:not(:checked))){display: none}
+.solo-faltan .pais-card.completo{display: none}
+/*Historial*/
+#tabs{display:flex;gap:6px;margin-bottom:14px}
+#tabs button{padding:8px 16px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);cursor:pointer}
+#tabs button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+#hist{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.hrow{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bd);cursor:pointer}
+.hrow:hover{background:var(--bg)}.hrow small{color:var(--mut);white-space:nowrap}
+.nota{color:var(--mut);font-size:13px;padding:10px 14px}
+/*Logros*/
+#logros{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.logro{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;text-align:center}
+.logro .ico{font-size:30px}.logro p{margin:4px 0;font-size:12px;color:var(--mut)}
+.logro.off{opacity:.55}.logro.off .ico{filter:grayscale(1)}.logro.on{border-color:var(--ac)}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:10px 18px;border-radius:10px;z-index:20;display:none}
+/*Zoom mapa*/
+#zoombtns{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:4px;z-index:2}
+#zoombtns button{width:32px;height:32px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);cursor:pointer;font-size:16px}
+#zoombtns button:hover{border-color:var(--ac)}
 </style>
 </head>
 <body>
@@ -34,17 +74,45 @@ details.cont>summary{padding:12px 16px;font-weight:600;cursor:pointer}
   <h1>🪙 Mi colección</h1>
   <input id="q" list="paises" placeholder="Buscar país… (Enter para ir)">
   <datalist id="paises"></datalist>
+  <label class="solo"><input type="checkbox" id="solo">Solo los que faltan</label>
   <span id="tot"></span>
+  <button id="tema" title="Cambiar tema">🌓</button>
+  <button id="exp">⬇ Exportar</button>
+  <button id="imp">⬆ Importar</button>
+  <input type="file" id="file" accept=".json" hidden>
 </header>
 <main>
-  <div id="mapa"><span id="cargando" style="color:var(--mut)">Cargando mapa…</span></div>
-  <div id="lista"></div>
+  <nav id="tabs">
+    <button data-tab="coleccion" class="on">Colección</button>
+    <button data-tab="historial">Historial</button>
+    <button data-tab="logros">Logros</button>
+  </nav>
+
+  <section id="tab-coleccion">
+    <div id="mapa">
+      <span id="cargando" style="color:var(--mut)">Cargando mapa…</span>
+      <div id="conts"></div>
+      <div id="zoombtns">
+        <button data-z="in" title="Acercar">+</button>
+        <button data-z="out" title="Alejar">-</button>
+        <button data-z="reset" title="Restablecer">⟲</button>
+      </div>
+    </div>
+    <div id="lista"></div>
+  </section>
+
+  <section id="tab-historial" hidden><div id="hist"></div></section>
+
+  <section id="tab-logros" hidden><div id="logros"></div></section>
 </main>
+<dialog id="ficha"></dialog>
+<div id="toast"></div>
 <div id="tip"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.0.1/dist/topojson-client.min.js"></script>
 <script src="data.js"></script>
+<script src="historia.js"></script>
 <script>
 const KEY = 'coleccion-numismatica';
 let marcados = JSON.parse(localStorage.getItem(KEY) || '{}');
@@ -70,7 +138,7 @@ function stats(p) {
   const falta = tipo => p.items.filter(i => i.t === tipo && !marcados[i.k]).map(i => i.d);
   return {t, g, pct: t ? g / t : 0, fm: falta('M'), fb: falta('B')};
 }
-const color = pct => pct === 0 ? '#e9e9e9' : d3.interpolateYlGn(0.25 + 0.75 * pct);
+const color = pct => pct === 0 ? 'var(--vacio)' : d3.interpolateYlGn(0.25 + 0.75 * pct);
 
 // Listado
 const lista = document.getElementById('lista');
@@ -82,7 +150,7 @@ Object.keys(PAISES).forEach(cont => {
     const fila = (t, nom) => {
       const its = p.items.filter(i => i.t === t);
       return its.length ? `<div class="fila"><em>${nom}</em>${its.map(i =>
-        `<label class="chip"><input type="checkbox" data-k="${i.k}" ${marcados[i.k] ? 'checked' : ''}>${i.d}</label>`).join('')}</div>` : '';
+        `<label class="chip"><input type="checkbox" data-k="${i.k}" ${marcados[i.k] ? 'checked' : ''}>${i.d}<button type="button" class="inf" data-info="${i.k}">ⓘ</button></label>`).join('')}</div>` : '';
     };
     div.innerHTML = `<div class="ph"><div><strong>${p.nombre}</strong> <small>${p.dn} (${p.cur})</small></div>
       <div><small class="cnt"></small> <button data-all>Marcar todo</button></div></div>
@@ -91,20 +159,37 @@ Object.keys(PAISES).forEach(cont => {
   });
   lista.appendChild(det);
 });
+//Divisas cuyas piezas se marcan a la vez en todos los paises
+const COMPARTIDAS = ['EUR'];
 
-lista.addEventListener('change', e => {
-  const k = e.target.dataset.k; if (!k) return;
-  e.target.checked ? marcados[k] = 1 : delete marcados[k];
-  guardar(); refrescar();
+function marcar(p,i,on){
+  const afectados = COMPARTIDAS.includes(p.cur) ? paises.filter(x => x.cur === p.cur) : [p];
+  const ahora = Date.now();
+  afectados.forEach(x => {
+    const k = `${x.nombre}|${i.t}|${i.d}`;
+    if (on) marcados[k] = marcados[k] || ahora; else delete marcados[k];
+  });
+}
+
+function sincronizarCasillas(){
+  document.querySelectorAll('input[data-k]').forEach(c => c.checked = !!marcados[c.dataset.k]);
+}
+
+lista.addEventListener('change',e => {
+  const k = e.target.dataset.k;if (!k) return;
+  const [nombre,t,d] = k.split('|');
+  const p = paises.find(x => x.nombre === nombre);
+  marcar(p, {t,d},e.target.checked);
+  guardar(); sincronizarCasillas(); refrescar();
 });
+
 lista.addEventListener('click', e => {
-  if (!e.target.dataset.all) return;
+  if (e.target.dataset.info) { e.preventDefault(); ficha(e.target.dataset.info); return; }
+  if (e.target.dataset.all === undefined) return;
   const p = paises.find(x => x.id === e.target.closest('.pais-card').id);
   const todo = stats(p).g === p.items.length;
-  p.items.forEach(i => todo ? delete marcados[i.k] : marcados[i.k] = 1);
-  guardar();
-  e.target.closest('.pais-card').querySelectorAll('input').forEach(c => c.checked = !todo);
-  refrescar();
+  p.items.forEach(i=> marcar(p,i,!todo));
+  guardar(); sincronizarCasillas(); refrescar();
 });
 
 // Mapa
@@ -115,7 +200,8 @@ d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').the
   const proj = d3.geoNaturalEarth1().fitSize([960, 500], {type: 'Sphere'});
   const path = d3.geoPath(proj), tip = document.getElementById('tip');
   const svg = d3.select('#mapa').append('svg').attr('viewBox', '0 0 960 500');
-  rutas = svg.selectAll('path').data(geo.features).join('path').attr('class', 'pais').attr('d', path)
+  const g = svg.append('g');
+  rutas = g.selectAll('path').data(geo.features).join('path').attr('class', 'pais').attr('d', path)
     .on('mousemove', (e, d) => {
       const p = porIso[+d.id]; tip.style.display = 'block';
       tip.style.left = Math.min(e.clientX + 14, innerWidth - 290) + 'px'; tip.style.top = e.clientY + 14 + 'px';
@@ -126,6 +212,19 @@ d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').the
     })
     .on('mouseleave', () => tip.style.display = 'none')
     .on('click', (e, d) => porIso[+d.id] && ir(porIso[+d.id]));
+    const zoom = d3.zoom()
+    .scaleExtent([1, 12])
+    .translateExtent([[0, 0], [960, 500]])
+    .filter(e => e.type === 'wheel' ? (e.ctrlKey || e.metaKey) : !e.button)
+    .on('zoom', e => g.attr('transform', e.transform));
+  svg.call(zoom);
+
+  document.getElementById('zoombtns').onclick = e => {
+    const z = e.target.dataset.z; if (!z) return;
+    svg.transition().duration(300).call(
+      z === 'reset' ? zoom.transform : zoom.scaleBy,
+      z === 'reset' ? d3.zoomIdentity : (z === 'in' ? 1.6 : 1 / 1.6));
+  };
   refrescar();
 });
 
@@ -133,6 +232,7 @@ d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').the
 const dl = document.getElementById('paises'), q = document.getElementById('q');
 paises.forEach(p => dl.insertAdjacentHTML('beforeend', `<option value="${p.nombre}">`));
 function ir(p) {
+  tab('coleccion');
   const el = document.getElementById(p.id);
   el.closest('details').open = true;
   el.scrollIntoView({behavior: 'smooth', block: 'start'});
@@ -146,12 +246,91 @@ function buscar() {
 q.addEventListener('change', buscar);
 q.addEventListener('keydown', e => e.key === 'Enter' && buscar());
 
+function panelContinentes(){
+  document.getElementById('conts').innerHTML = Object.keys(PAISES).map(c => {
+    const ps = paises.filter(p => p.cont === c);
+    const g = ps.reduce((a,p) => a + stats(p).g,0);
+    const t = ps.reduce((a,p) => a + p.items.length,0);
+    const pct = t ? g /t *100: 0;
+    return `<div class="cp"><span>${c}</span><b>${g}/${t}</b>
+            <div class="bar"><i style="width:${pct}%"></i></div></div>`;
+  }).join('');
+}
+// ---------- Logros ----------
+// f recibe el resumen y devuelve [progreso actual, objetivo]
+const LOGROS = [
+  {ico: '🌱', n: 'Primera pieza',      d: 'Marca tu primera pieza',               f: r => [r.piezas, 1]},
+  {ico: '🥉', n: 'Aficionado',         d: 'Consigue 10 piezas',                   f: r => [r.piezas, 10]},
+  {ico: '🥈', n: 'Coleccionista',      d: 'Consigue 100 piezas',                  f: r => [r.piezas, 100]},
+  {ico: '🥇', n: 'Experto',            d: 'Consigue 500 piezas',                  f: r => [r.piezas, 500]},
+  {ico: '💎', n: 'Maestro',            d: 'Consigue 1.000 piezas',                f: r => [r.piezas, 1000]},
+  {ico: '🏳️', n: 'Primer país',        d: 'Completa un país',                     f: r => [r.completos, 1]},
+  {ico: '🌍', n: 'Viajero',            d: 'Completa 10 países',                   f: r => [r.completos, 10]},
+  {ico: '🗺️', n: 'Medio continente',   d: 'Llega al 50 % en un continente',       f: r => [r.mejorCont, 50]},
+  {ico: '💶', n: 'Eurozona',           d: 'Completa todos los países del euro',   f: r => [r.euro, r.euroT]},
+  {ico: '🧾', n: 'Papel moneda',       d: 'Consigue 50 billetes',                 f: r => [r.billetes, 50]},
+  {ico: '📅', n: 'Constante',          d: 'Añade piezas en 7 días distintos',     f: r => [r.dias, 7]}
+];
+
+function resumenLogros(){
+  const r = {piezas: 0, billetes: 0,completos: 0,euro: 0,euroT: 0,mejorCont:0};
+  paises.forEach(p => {
+    const s = stats(p),comp = s.t > 0 && s.g === s.t;
+    r.piezas += s.g;
+    r.billetes += p.items.filter(i => i.t === 'B' && marcados[i.k]).length;
+    if(comp) r.completos++;
+    if(p.cur === 'EUR') {r.euroT++;if(comp)r.euro++;}
+  });
+  Object.keys(PAISES).forEach(c => {
+    const ps = paises.filter(p =>p.cont === c);
+    const g = ps.reduce((a,p) => a + stats(p).g,0);
+    const t = ps.reduce((a,p) => a + p.items.length,0);
+    r.mejorCont = Math.max(r.mejorCont, t ? g / t  * 100 :0);
+  });
+  const dias = new Set();
+  Object.values(marcados).forEach(v => v > 1 && dias.add(new Date(v).toDateString()));
+  r.dias = dias.size;
+  return r;
+}
+
+function pintarLogros() {
+  const r = resumenLogros();
+  const est = LOGROS.map(l => { const [a, b] = l.f(r); return {...l, a, b, ok: a >= b}; });
+  document.getElementById('logros').innerHTML = est.map(l => `
+    <div class="logro ${l.ok ? 'on' : 'off'}"><div class="ico">${l.ico}</div>
+      <strong>${l.n}</strong><p>${l.d}</p>
+      ${l.ok ? '<p>✔ Conseguido</p>'
+             : `<p>${Math.floor(l.a)} / ${Math.ceil(l.b)}</p><div class="bar"><i style="width:${l.a / l.b * 100}%"></i></div>`}
+    </div>`).join('');
+  const ok = est.filter(l => l.ok);
+  document.querySelector('#tabs [data-tab="logros"]').textContent = `Logros (${ok.length}/${est.length})`;
+  return ok.map(l => l.n);
+}
+
+function aviso(t){
+  const el = document.getElementById('toast');
+  el.textContent = t; el.style.display = 'block';
+  clearTimeout(aviso.t); aviso.t = setTimeout(() => el.style.display = 'none',2200);
+}
+
+function comprobarLogros(){
+  const ahora = pintarLogros();
+  const previo = localStorage.getItem('logros');
+  if(previo !== null){
+    const antes = JSON.parse(previo);
+    ahora.filter(n => !antes.includes(n))
+    .forEach((n,i) => setTimeout(() => aviso('🏆 Logro desbloqueado: ' + n),i * 2500));
+  }
+  localStorage.setItem('logros',JSON.stringify(ahora));
+}
+
 // Refrescar interfaz
 function refrescar() {
   let T = 0, G = 0;
   paises.forEach(p => {
     const s = stats(p); T += s.t; G += s.g;
     const el = document.getElementById(p.id);
+    el.classList.toggle('completo',s.t > 0 && s.g === s.t);
     el.querySelector('.cnt').textContent = `${s.g}/${s.t}`;
     el.querySelector('.bar i').style.width = s.pct * 100 + '%';
   });
@@ -162,8 +341,115 @@ function refrescar() {
   });
   document.getElementById('tot').textContent = `${G} de ${T} piezas (${(G / T * 100).toFixed(1)}%)`;
   if (rutas) rutas.style('fill', d => { const p = porIso[+d.id]; return p ? color(stats(p).pct) : '#cfcfcf'; });
+  panelContinentes();
+  pintarHistorial();
+  comprobarLogros();
 }
+async function ficha(k) {
+  const [nombre, t, d] = k.split('|');
+  const p = paises.find(x => x.nombre === nombre);
+  const dlg = document.getElementById('ficha');
+  dlg.innerHTML = `<h3></h3><p id="ftxt">Cargando…</p><a id="flink" target="_blank" hidden>Leer más en Wikipedia</a><br>
+                   <button onclick="this.closest('dialog').close()">Cerrar</button>`;
+  dlg.querySelector('h3').textContent = `${t === 'M' ? 'Moneda' : 'Billete'} de ${d} · ${p.dn}`;
+  dlg.showModal();
+
+  const txt = document.getElementById('ftxt');
+  const propio = HISTORIA[`${p.cur}|${t}|${d}`] || HISTORIA[`${p.cur}|*`];
+  if (propio) { txt.textContent = propio; return; }
+
+  try {
+    const r = await fetch('https://es.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(p.dn));
+    if (!r.ok) throw new Error();
+    const j = await r.json();
+    txt.textContent = j.extract;
+    const a = document.getElementById('flink');
+    a.href = j.content_urls.desktop.page; a.hidden = false;
+  } catch {
+    txt.textContent = 'Todavía no hay información de esta pieza. Puedes añadirla en historia.js.';
+  }
+}
+document.getElementById('tema').onclick = () => {
+  const html = document.documentElement;
+  const actual =  html.dataset.theme || (matchMedia('(prefers-color-shceme: dark)').matches ? 'dark' : 'light');
+  const nuevo = actual === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = nuevo;
+  localStorage.setItem('tema',nuevo);
+};
+// ---------- Pestañas ----------
+function tab(n) {
+  ['coleccion', 'historial','logros'].forEach(x => {
+    document.getElementById('tab-' + x).hidden = x !== n;
+    document.querySelector(`#tabs [data-tab="${x}"]`).classList.toggle('on', x === n);
+  });
+}
+document.getElementById('tabs').addEventListener('click', e => e.target.dataset.tab && tab(e.target.dataset.tab));
+
+// ---------- Historial ----------
+function pintarHistorial() {
+  const todos = [];
+  let sinFecha = 0;
+  paises.forEach(p => p.items.forEach(i => {
+    const v = marcados[i.k];
+    if (v > 1) todos.push({p, i, v}); else if (v) sinFecha++;
+  }));
+  todos.sort((a, b) => b.v - a.v);
+  const vistos = new Set();
+  const unicos = todos.filter(({p,i,v}) => {
+    if(!COMPARTIDAS.includes(p.cur)) return true;
+    const c = `${p.cur}|${i.t}|${i.d}|${v}`;
+    if(vistos.has(c)) return false;
+    vistos.add(c); return true;
+  });
+
+  const fmt = v => new Date(v).toLocaleDateString('es-ES', {day: 'numeric', month: 'short', year: 'numeric'});
+  const filas = unicos.slice(0, 20).map(({p, i, v}) =>
+    `<div class="hrow" data-id="${p.id}">
+       <span>${i.t === 'M' ? '🪙 Moneda' : '💶 Billete'} de ${i.d} · <b>${COMPARTIDAS.includes(p.cur) ? p.dn : p.nombre}</b></span>
+       <small>${fmt(v)}</small></div>`).join('');
+  document.getElementById('hist').innerHTML =
+    (filas || '<div class="nota">Aún no hay piezas con fecha. Marca alguna y aparecerá aquí.</div>') +
+    (sinFecha ? `<div class="nota">${sinFecha} piezas anteriores sin fecha registrada.</div>` : '');
+}
+document.getElementById('hist').addEventListener('click', e => {
+  const r = e.target.closest('.hrow');
+  if (r) ir(paises.find(p => p.id === r.dataset.id));
+});
 refrescar();
+const solo = document.getElementById('solo');
+const aplicarSolo = () => document.body.classList.toggle('solo-faltan',solo.checked);
+solo.checked = localStorage.getItem('solo') === '1';
+aplicarSolo();
+solo.onchange = () => {
+  aplicarSolo();
+  localStorage.setItem('solo',solo.checked ? '1' : '0');
+};
+//Exportar coleccion a un archivo JSON
+document.getElementById('exp').onclick = () => {
+  const blob = new Blob([JSON.stringify(marcados,null,2)],{type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'coleccion-' + new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+//Importar coleccion desde un archivo JSON
+document.getElementById('imp').onclick = () => document.getElementById('file').click();
+document.getElementById('file').onchange = async e => {
+  const f = e.target.files[0];
+  if(!f) return ;
+  try {
+    const datos = JSON.parse(await f.text());
+    if(typeof datos !== 'object' || Array.isArray(datos)) throw new Error('formato');
+    marcados = datos;
+    guardar();
+    document.querySelectorAll('input[data-k]').forEach(c => c.checked = !!marcados[c.dataset.k]);
+    refrescar();
+  } catch {
+    alert('El archivo no es una colección válida');
+  }
+  e.target.value = '';
+};
 </script>
 </body>
 </html>
