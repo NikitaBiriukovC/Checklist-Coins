@@ -159,21 +159,37 @@ Object.keys(PAISES).forEach(cont => {
   });
   lista.appendChild(det);
 });
+//Divisas cuyas piezas se marcan a la vez en todos los paises
+const COMPARTIDAS = ['EUR'];
 
-lista.addEventListener('change', e => {
-  const k = e.target.dataset.k; if (!k) return;
-  e.target.checked ? marcados[k] = Date.now() : delete marcados[k];
-  guardar(); refrescar();
+function marcar(p,i,on){
+  const afectados = COMPARTIDAS.includes(p.cur) ? paises.filter(x => x.cur === p.cur) : [p];
+  const ahora = Date.now();
+  afectados.forEach(x => {
+    const k = `${x.nombre}|${i.t}|${i.d}`;
+    if (on) marcados[k] = marcados[k] || ahora; else delete marcados[k];
+  });
+}
+
+function sincronizarCasillas(){
+  document.querySelectorAll('input[data-k]').forEach(c => c.checked = !!marcados[c.dataset.k]);
+}
+
+lista.addEventListener('change',e => {
+  const k = e.target.dataset.k;if (!k) return;
+  const [nombre,t,d] = k.split('|');
+  const p = paises.find(x => x.nombre === nombre);
+  marcar(p, {t,d},e.target.checked);
+  guardar(); sincronizarCasillas(); refrescar();
 });
+
 lista.addEventListener('click', e => {
   if (e.target.dataset.info) { e.preventDefault(); ficha(e.target.dataset.info); return; }
-  if (!e.target.dataset.all) return;
+  if (e.target.dataset.all === undefined) return;
   const p = paises.find(x => x.id === e.target.closest('.pais-card').id);
   const todo = stats(p).g === p.items.length;
-  p.items.forEach(i => todo ? delete marcados[i.k] : marcados[i.k] =  marcados[i.k] || Date.now());
-  guardar();
-  e.target.closest('.pais-card').querySelectorAll('input').forEach(c => c.checked = !todo);
-  refrescar();
+  p.items.forEach(i=> marcar(p,i,!todo));
+  guardar(); sincronizarCasillas(); refrescar();
 });
 
 // Mapa
@@ -378,10 +394,18 @@ function pintarHistorial() {
     if (v > 1) todos.push({p, i, v}); else if (v) sinFecha++;
   }));
   todos.sort((a, b) => b.v - a.v);
+  const vistos = new Set();
+  const unicos = todos.filter(({p,i,v}) => {
+    if(!COMPARTIDAS.includes(p.cur)) return true;
+    const c = `${p.cur}|${i.t}|${i.d}|${v}`;
+    if(vistos.has(c)) return false;
+    vistos.add(c); return true;
+  });
+
   const fmt = v => new Date(v).toLocaleDateString('es-ES', {day: 'numeric', month: 'short', year: 'numeric'});
-  const filas = todos.slice(0, 20).map(({p, i, v}) =>
+  const filas = unicos.slice(0, 20).map(({p, i, v}) =>
     `<div class="hrow" data-id="${p.id}">
-       <span>${i.t === 'M' ? '🪙 Moneda' : '💶 Billete'} de ${i.d} · <b>${p.nombre}</b></span>
+       <span>${i.t === 'M' ? '🪙 Moneda' : '💶 Billete'} de ${i.d} · <b>${COMPARTIDAS.includes(p.cur) ? p.dn : p.nombre}</b></span>
        <small>${fmt(v)}</small></div>`).join('');
   document.getElementById('hist').innerHTML =
     (filas || '<div class="nota">Aún no hay piezas con fecha. Marca alguna y aparecerá aquí.</div>') +
