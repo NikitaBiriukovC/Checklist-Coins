@@ -67,6 +67,10 @@ header button:hover{border-color: var(--ac);}
 #zoombtns{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:4px;z-index:2}
 #zoombtns button{width:32px;height:32px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);cursor:pointer;font-size:16px}
 #zoombtns button:hover{border-color:var(--ac)}
+/*Volver arriba*/
+#arriba{position:fixed;right:18px;bottom:18px;width:42px;height:42px;border-radius:50%;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:18px;cursor:pointer;z-index:8;box-shadow:0 2px 8px rgba(0,0,0,.2);opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .2s,transform .2s,visibility .2s}
+#arriba.ver{opacity:1;visibility:visible;transform:none}
+#arriba:hover{border-color:var(--ac);color:var(--ac)}
 </style>
 </head>
 <body>
@@ -106,6 +110,7 @@ header button:hover{border-color: var(--ac);}
   <section id="tab-logros" hidden><div id="logros"></div></section>
 </main>
 <dialog id="ficha"></dialog>
+<button id="arriba" title="Volver arriba" aria-label="Volver arriba">↑</button>
 <div id="toast"></div>
 <div id="tip"></div>
 
@@ -450,6 +455,11 @@ document.getElementById('file').onchange = async e => {
   }
   e.target.value = '';
 };
+
+// ---------- Volver arriba ----------
+const arriba = document.getElementById('arriba');
+addEventListener('scroll', () => arriba.classList.toggle('ver', scrollY > 600), {passive: true});
+arriba.onclick = () => scrollTo({top: 0, behavior: 'smooth'});
 </script>
 </body>
 </html>
