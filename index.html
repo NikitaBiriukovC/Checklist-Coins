@@ -71,6 +71,11 @@ header button:hover{border-color: var(--ac);}
 #arriba{position:fixed;right:18px;bottom:18px;width:42px;height:42px;border-radius:50%;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:18px;cursor:pointer;z-index:8;box-shadow:0 2px 8px rgba(0,0,0,.2);opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .2s,transform .2s,visibility .2s}
 #arriba.ver{opacity:1;visibility:visible;transform:none}
 #arriba:hover{border-color:var(--ac);color:var(--ac)}
+/*Leyenda del mapa*/
+#leyenda{position:absolute;right:14px;bottom:14px;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mut);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:6px 10px;opacity:.95}
+#leyenda .sw{width:14px;height:10px;border-radius:2px;background:var(--vacio);border:1px solid var(--bd)}
+#grad{width:110px;height:10px;border-radius:2px}
+@media(max-width:700px){#leyenda{position:static;margin-top:8px;justify-content:flex-end}}
 </style>
 </head>
 <body>
@@ -100,6 +105,12 @@ header button:hover{border-color: var(--ac);}
         <button data-z="in" title="Acercar">+</button>
         <button data-z="out" title="Alejar">-</button>
         <button data-z="reset" title="Restablecer">⟲</button>
+      </div>
+      <div id="leyenda">
+        <span>0 %</span>
+        <i class="sw"></i>
+        <i id="grad"></i>
+        <span>100 %</span>
       </div>
     </div>
     <div id="lista"></div>
@@ -144,7 +155,9 @@ function stats(p) {
   return {t, g, pct: t ? g / t : 0, fm: falta('M'), fb: falta('B')};
 }
 const color = pct => pct === 0 ? 'var(--vacio)' : d3.interpolateYlGn(0.25 + 0.75 * pct);
-
+// Leyenda: el degradado usa la misma función de color que el mapa
+document.getElementById('grad').style.background =
+  'linear-gradient(to right,' + [0.05, 0.25, 0.5, 0.75, 1].map(p => color(p)).join(',') + ')';
 // Listado
 const lista = document.getElementById('lista');
 Object.keys(PAISES).forEach(cont => {
