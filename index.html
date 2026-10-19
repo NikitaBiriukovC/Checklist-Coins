@@ -76,6 +76,14 @@ header button:hover{border-color: var(--ac);}
 #leyenda .sw{width:14px;height:10px;border-radius:2px;background:var(--vacio);border:1px solid var(--bd)}
 #grad{width:110px;height:10px;border-radius:2px}
 @media(max-width:700px){#leyenda{position:static;margin-top:8px;justify-content:flex-end}}
+/*País del día*/
+#dia{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+#dia h2{margin:2px 0 4px;font-size:20px}
+#dia p{margin:3px 0;font-size:13px;color:var(--mut)}
+#dia .curio{color:var(--tx);max-width:640px}
+#dia .acc{display:flex;gap:6px;align-items:flex-start}
+#dia button{padding:7px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer}
+#dia button:hover{border-color:var(--ac)}
 </style>
 </head>
 <body>
@@ -98,6 +106,7 @@ header button:hover{border-color: var(--ac);}
   </nav>
 
   <section id="tab-coleccion">
+    <div id="dia"></div>
     <div id="mapa">
       <span id="cargando" style="color:var(--mut)">Cargando mapa…</span>
       <div id="conts"></div>
@@ -274,6 +283,36 @@ function panelContinentes(){
             <div class="bar"><i style="width:${pct}%"></i></div></div>`;
   }).join('');
 }
+// ---------- Pais del día -------
+function paisDelDia(){
+  const d = new Date();
+  const semilla = d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+  return paises[Math.abs(Math.imul(semilla,2654435761))%paises.length];
+}
+let diaP = paisDelDia();
+
+function pintarDia(){
+  const s = stats(diaP);
+  const curio = HISTORIA[`${diaP.cur}|*`] || `Aquí se usa ${diaP.dn} (${diaP.cur}).`;
+  document.getElementById('dia').innerHTML = `
+    <div>
+      <small>🎲 País del día</small>
+      <h2>${diaP.nombre}</h2>
+      <p>${diaP.dn} (${diaP.cur}) · ${diaP.cont}</p>
+      <p class="curio">${curio}</p>
+      <p>Llevas <b>${s.g}/${s.t}</b> piezas de este país.</p>
+    </div>
+    <div class="acc">
+      <button data-dia="ir">Ver país</button>
+      <button data-dia="otro">Otro país 🎲</button>
+    </div>`;
+}
+
+document.getElementById('dia').addEventListener('click', e => {
+  const a = e.target.dataset.dia; if (!a) return;
+  if(a === 'ir')ir(diaP);
+  else{ diaP = paises[Math.floor(Math.random() * paises.length)];pintarDia();}
+});
 // ---------- Logros ----------
 // f recibe el resumen y devuelve [progreso actual, objetivo]
 const LOGROS = [
@@ -360,6 +399,7 @@ function refrescar() {
   document.getElementById('tot').textContent = `${G} de ${T} piezas (${(G / T * 100).toFixed(1)}%)`;
   if (rutas) rutas.style('fill', d => { const p = porIso[+d.id]; return p ? color(stats(p).pct) : '#cfcfcf'; });
   panelContinentes();
+  pintarDia();
   pintarHistorial();
   comprobarLogros();
 }
