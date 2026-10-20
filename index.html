@@ -84,6 +84,9 @@ header button:hover{border-color: var(--ac);}
 #dia .acc{display:flex;gap:6px;align-items:flex-start}
 #dia button{padding:7px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer}
 #dia button:hover{border-color:var(--ac)}
+/*País del día en el mapa*/
+.pais.dia{stroke:#ff6d00;stroke-width:2.5}
+#leyenda .sw.dia{background:#ff6d00;border-color:#ff6d00}
 </style>
 </head>
 <body>
@@ -116,6 +119,7 @@ header button:hover{border-color: var(--ac);}
         <button data-z="reset" title="Restablecer">⟲</button>
       </div>
       <div id="leyenda">
+        <i class="sw dia"></i><span>Hoy</span>
         <span>0 %</span>
         <i class="sw"></i>
         <i id="grad"></i>
@@ -306,6 +310,10 @@ function pintarDia(){
       <button data-dia="ir">Ver país</button>
       <button data-dia="otro">Otro país 🎲</button>
     </div>`;
+      if (rutas) {
+        rutas.classed('dia', d => porIso[+d.id] === diaP);   // pone o quita la clase
+        rutas.filter('.dia').raise();                         // la dibuja encima de los vecinos
+      }
 }
 
 document.getElementById('dia').addEventListener('click', e => {
