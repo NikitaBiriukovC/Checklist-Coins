@@ -84,6 +84,20 @@ header button:hover{border-color: var(--ac);}
 #dia .acc{display:flex;gap:6px;align-items:flex-start}
 #dia button{padding:7px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer}
 #dia button:hover{border-color:var(--ac)}
+/*Impresión*/
+#ptitulo{display:none}
+@media print{
+  header,#tabs,#mapa,#dia,#toast,#tip,#arriba,#ficha,.ph button,.inf,.bar,#tab-historial,#tab-logros{display:none!important}
+  #tab-coleccion{display:block!important}
+  body{background:#fff;color:#000;font-size:11px}
+  main{max-width:none;padding:0}
+  #ptitulo{display:block;font-size:16px;font-weight:700;margin-bottom:8px}
+  details.cont{background:none;border:0;border-radius:0;margin-top:10px}
+  details.cont>summary{color:#000;padding:4px 0;border-bottom:2px solid #000;list-style:none}
+  .pais-card{border-top:1px solid #ccc;padding:4px 0;break-inside:avoid}
+  .ph small,.fila em{color:#444}
+  .chip{border:1px solid #888;border-radius:3px;padding:0 6px;color:#000;background:none!important}
+}
 /*País del día en el mapa*/
 .pais.dia{stroke:#ff6d00;stroke-width:2.5}
 #leyenda .sw.dia{background:#ff6d00;border-color:#ff6d00}
@@ -99,6 +113,7 @@ header button:hover{border-color: var(--ac);}
   <button id="tema" title="Cambiar tema">🌓</button>
   <button id="exp">⬇ Exportar</button>
   <button id="imp">⬆ Importar</button>
+  <button id="imprimir" title="Imprimir lo que me falta">🖨 Imprimir</button>
   <input type="file" id="file" accept=".json" hidden>
 </header>
 <main>
@@ -133,6 +148,7 @@ header button:hover{border-color: var(--ac);}
 
   <section id="tab-logros" hidden><div id="logros"></div></section>
 </main>
+<div id="ptitulo"></div>
 <dialog id="ficha"></dialog>
 <button id="arriba" title="Volver arriba" aria-label="Volver arriba">↑</button>
 <div id="toast"></div>
@@ -516,6 +532,23 @@ document.getElementById('file').onchange = async e => {
   }
   e.target.value = '';
 };
+// ---------- Impresion --------------
+document.getElementById('imprimir').onclick = () => print();
+
+let estadoPrint;
+addEventListener('beforeprint', () => {
+  const dets = [...document.querySelectorAll('details.cont')];
+  estadoPrint = {solo:document.body.classList.contains('solo-faltan'),abiertos: dets.map(d => d.open)};
+  document.body.classList.add('solo-faltan');
+  dets.forEach(d => d.open = true);
+  document.getElementById('ptitulo').textContent = 
+  'Mi colección: piezas que me faltan .'+new Date().toLocaleDateString('es-Es');
+});
+addEventListener('afterprint',() => {
+  if(!estadoPrint) return;
+  document.body.classList.toggle('solo-faltan',estadoPrint.solo);
+  document.querySelectorAll('details.cont').forEach((d,i) => d.open = estadoPrint.abiertos[i]);
+});
 
 // ---------- Volver arriba ----------
 const arriba = document.getElementById('arriba');
