@@ -108,7 +108,7 @@ header button:hover{border-color: var(--ac);}
   <h1>🪙 Mi colección</h1>
   <input id="q" list="paises" placeholder="Buscar país… (Enter para ir)">
   <datalist id="paises"></datalist>
-  <label class="solo"><input type="checkbox" id="solo">Solo los que faltan</label>
+  <label class="solo"><input type="checkbox" id="solo">Solo los que faltan <span id="pend"></span></label>
   <span id="tot"></span>
   <button id="tema" title="Cambiar tema">🌓</button>
   <button id="exp">⬇ Exportar</button>
@@ -421,6 +421,7 @@ function refrescar() {
     d.querySelector('summary').textContent = `${d.dataset.cont} — ${ps.length} países · ${g}/${t}`;
   });
   document.getElementById('tot').textContent = `${G} de ${T} piezas (${(G / T * 100).toFixed(1)}%)`;
+  document.getElementById('pend').textContent = `(${(T - G).toLocaleString('es-ES')})`;
   if (rutas) rutas.style('fill', d => { const p = porIso[+d.id]; return p ? color(stats(p).pct) : '#cfcfcf'; });
   panelContinentes();
   pintarDia();
