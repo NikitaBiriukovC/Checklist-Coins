@@ -101,6 +101,13 @@ header button:hover{border-color: var(--ac);}
 /*País del día en el mapa*/
 .pais.dia{stroke:#ff6d00;stroke-width:2.5}
 #leyenda .sw.dia{background:#ff6d00;border-color:#ff6d00}
+/*Duplicados*/
+#dups{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+#dups .nota button{margin-left:8px;padding:3px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer}
+.dupc{display:none;align-items:center;gap:3px;margin-left:6px}
+.chip:has(input:checked) .dupc{display:inline-flex}
+.dm{border:0;background:rgba(255,255,255,.3);color:#fff;border-radius:50%;width:17px;height:17px;line-height:1;padding:0;cursor:pointer}
+.dn{font-size:11px;min-width:10px}
 </style>
 </head>
 <body>
@@ -117,10 +124,11 @@ header button:hover{border-color: var(--ac);}
   <input type="file" id="file" accept=".json" hidden>
 </header>
 <main>
-  <nav id="tabs">
+    <nav id="tabs">
     <button data-tab="coleccion" class="on">Colección</button>
     <button data-tab="historial">Historial</button>
     <button data-tab="logros">Logros</button>
+    <button data-tab="duplicados">Duplicados</button>
   </nav>
 
   <section id="tab-coleccion">
@@ -147,6 +155,8 @@ header button:hover{border-color: var(--ac);}
   <section id="tab-historial" hidden><div id="hist"></div></section>
 
   <section id="tab-logros" hidden><div id="logros"></div></section>
+
+  <section id="tab-duplicados" hidden><div id="dups"></div></section>
 </main>
 <div id="ptitulo"></div>
 <dialog id="ficha"></dialog>
@@ -161,7 +171,11 @@ header button:hover{border-color: var(--ac);}
 <script>
 const KEY = 'coleccion-numismatica';
 let marcados = JSON.parse(localStorage.getItem(KEY) || '{}');
-const guardar = () => localStorage.setItem(KEY, JSON.stringify(marcados));
+let extra = JSON.parse(localStorage.getItem(KEY + '-extra') || '{}');
+const guardar = () => {
+  localStorage.setItem(KEY, JSON.stringify(marcados));
+  localStorage.setItem(KEY + '-extra', JSON.stringify(extra));
+};
 const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 // Construir países
@@ -177,6 +191,7 @@ Object.entries(PAISES).forEach(([cont, str]) => str.split(';').forEach(s => {
   paises.push({iso: +iso, nombre, cont, cur, dn, items, id: 'p' + paises.length});
 }));
 const porIso = {}; paises.forEach(p => p.iso && (porIso[p.iso] = p));
+const porNombre = {}; paises.forEach(p => porNombre[p.nombre] = p);
 
 function stats(p) {
   const t = p.items.length, g = p.items.filter(i => marcados[i.k]).length;
@@ -195,10 +210,10 @@ Object.keys(PAISES).forEach(cont => {
   paises.filter(p => p.cont === cont).forEach(p => {
     const div = document.createElement('div'); div.className = 'pais-card'; div.id = p.id;
     const fila = (t, nom) => {
-      const its = p.items.filter(i => i.t === t);
-      return its.length ? `<div class="fila"><em>${nom}</em>${its.map(i =>
-        `<label class="chip"><input type="checkbox" data-k="${i.k}" ${marcados[i.k] ? 'checked' : ''}>${i.d}<button type="button" class="inf" data-info="${i.k}">ⓘ</button></label>`).join('')}</div>` : '';
-    };
+  const its = p.items.filter(i => i.t === t);
+  return its.length ? `<div class="fila"><em>${nom}</em>${its.map(i =>
+    `<label class="chip"><input type="checkbox" data-k="${i.k}" ${marcados[i.k] ? 'checked' : ''}>${i.d}<span class="dupc"><button type="button" class="dm" data-dup="-1" data-k2="${i.k}">−</button><b class="dn"></b><button type="button" class="dm" data-dup="1" data-k2="${i.k}">+</button></span><button type="button" class="inf" data-info="${i.k}">ⓘ</button></label>`).join('')}</div>` : '';
+};
     div.innerHTML = `<div class="ph"><div><strong>${p.nombre}</strong> <small>${p.dn} (${p.cur})</small></div>
       <div><small class="cnt"></small> <button data-all>Marcar todo</button></div></div>
       ${fila('M', 'Monedas')}${fila('B', 'Billetes')}<div class="bar"><i></i></div>`;
@@ -209,13 +224,27 @@ Object.keys(PAISES).forEach(cont => {
 //Divisas cuyas piezas se marcan a la vez en todos los paises
 const COMPARTIDAS = ['EUR'];
 
-function marcar(p,i,on){
+function marcar(p, i, on) {
   const afectados = COMPARTIDAS.includes(p.cur) ? paises.filter(x => x.cur === p.cur) : [p];
   const ahora = Date.now();
   afectados.forEach(x => {
     const k = `${x.nombre}|${i.t}|${i.d}`;
-    if (on) marcados[k] = marcados[k] || ahora; else delete marcados[k];
+    if (on) marcados[k] = marcados[k] || ahora;
+    else { delete marcados[k]; delete extra[claveDup(x, i)]; }
   });
+}
+
+// Clave de duplicados: compartida por divisa, o propia del país
+function claveDup(p, i) {
+  return COMPARTIDAS.includes(p.cur) ? `${p.cur}|${i.t}|${i.d}` : `${p.nombre}|${i.t}|${i.d}`;
+}
+
+function cambiarDup(p, i, delta) {
+  if (!marcados[`${p.nombre}|${i.t}|${i.d}`]) return;      // solo si la tienes
+  const k = claveDup(p, i);
+  const n = Math.max(0, (extra[k] || 0) + delta);
+  n ? extra[k] = n : delete extra[k];
+  guardar(); refrescar();
 }
 
 function sincronizarCasillas(){
@@ -231,6 +260,12 @@ lista.addEventListener('change',e => {
 });
 
 lista.addEventListener('click', e => {
+  if (e.target.dataset.dup) {
+    e.preventDefault();
+    const [nombre, t, d] = e.target.dataset.k2.split('|');
+    cambiarDup(porNombre[nombre], {t, d}, +e.target.dataset.dup);
+    return;
+  }
   if (e.target.dataset.info) { e.preventDefault(); ficha(e.target.dataset.info); return; }
   if (e.target.dataset.all === undefined) return;
   const p = paises.find(x => x.id === e.target.closest('.pais-card').id);
@@ -404,7 +439,41 @@ function comprobarLogros(){
   }
   localStorage.setItem('logros',JSON.stringify(ahora));
 }
+// ---------- Duplicados ----------
+function pintarDupChips() {
+  document.querySelectorAll('input[data-k]').forEach(c => {
+    const [nombre, t, d] = c.dataset.k.split('|');
+    const n = extra[claveDup(porNombre[nombre], {t, d})] || 0;
+    c.parentElement.querySelector('.dn').textContent = n ? '×' + (n + 1) : '';   // ×2 = tienes 2
+  });
+}
 
+let listaDup = [];
+function pintarDups() {
+  const vistos = new Set(); listaDup = [];
+  paises.forEach(p => p.items.forEach(i => {
+    const k = claveDup(p, i), n = extra[k];
+    if (!n || !marcados[i.k] || vistos.has(k)) return;
+    vistos.add(k);
+    listaDup.push({n, id: p.id,
+      txt: `${i.t === 'M' ? 'Moneda' : 'Billete'} de ${i.d} · ${COMPARTIDAS.includes(p.cur) ? p.dn : p.nombre}`});
+  }));
+  const total = listaDup.reduce((a, x) => a + x.n, 0);
+  document.getElementById('dups').innerHTML = listaDup.length
+    ? `<div class="nota">${total} repetidas en ${listaDup.length} referencias <button id="copiarDup">📋 Copiar lista</button></div>` +
+      listaDup.map(x => `<div class="hrow" data-id="${x.id}"><span>${x.txt}</span><small>${x.n} repetida${x.n > 1 ? 's' : ''}</small></div>`).join('')
+    : '<div class="nota">Aún no tienes duplicados. Marca una pieza y pulsa + para anotar una repetida.</div>';
+}
+
+document.getElementById('dups').addEventListener('click', async e => {
+  if (e.target.id === 'copiarDup') {
+    try { await navigator.clipboard.writeText(listaDup.map(x => `${x.txt} (${x.n})`).join('\n')); aviso('📋 Lista copiada'); }
+    catch { aviso('No se pudo copiar'); }
+    return;
+  }
+  const r = e.target.closest('.hrow');
+  if (r) ir(paises.find(p => p.id === r.dataset.id));
+});
 // Refrescar interfaz
 function refrescar() {
   let T = 0, G = 0;
@@ -426,6 +495,8 @@ function refrescar() {
   panelContinentes();
   pintarDia();
   pintarHistorial();
+  pintarDupChips();
+  pintarDups();
   comprobarLogros();
 }
 async function ficha(k) {
@@ -461,7 +532,7 @@ document.getElementById('tema').onclick = () => {
 };
 // ---------- Pestañas ----------
 function tab(n) {
-  ['coleccion', 'historial','logros'].forEach(x => {
+  ['coleccion', 'historial','logros','duplicados'].forEach(x => {
     document.getElementById('tab-' + x).hidden = x !== n;
     document.querySelector(`#tabs [data-tab="${x}"]`).classList.toggle('on', x === n);
   });
